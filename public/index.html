@@ -58,29 +58,61 @@
     </table>
     <script>
         let ProductsData;
+        let editingProduct = null;
 
         async function saveProduct() {
-            const id = document.getElementById('id').value;
+            const ProductId = document.getElementById('productId').value;
             const name = document.getElementById('productName').value;
             const price = document.getElementById('productPrice').value;
-            const quantity = document.getElementById('productQuantity').value;
+            const Quantity = document.getElementById('productQuantity').value;
+            const product = { ProductId, name, price, Quantity };
+            let response;
+            if(editingProduct){
+                response = await fetch(`http://localhost:3000/api/product/updateProductById/${editingProduct.ProductId}`, {
+                method: 'patch',
+                headers: {
+                    'Content-Type': 'application/json' // Required for JSON body
+                },
+                body: JSON.stringify(product)
+            });
+            }
+            else{
 
+                response = await fetch('http://localhost:3000/api/product/createProduct', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // Required for JSON body
+                    },
+                    body: JSON.stringify(product)
+                });
+            }
+            const result = await response.json();
+            console.log(result);
+            if (response.ok) {
+                alert('Product saved successfully');
+                closeModal();
+                showAllProducts();
+            } else {
+                alert('Error saving product');
+            }
         }
 
         function showAddModal(product = null) {
             console.log(product);
-           // let productforedit = product;
+            // let productforedit = product;
             if (product == null) {
                 document.getElementById('productId').value = '';
                 document.getElementById('productName').value = '';
                 document.getElementById('productPrice').value = '';
                 document.getElementById('productQuantity').value = '';
+                editingProduct = null;
             }
             else {
                 document.getElementById('productId').value = product.ProductId;
                 document.getElementById('productName').value = product.name;
                 document.getElementById('productPrice').value = product.price;
                 document.getElementById('productQuantity').value = product.Quantity;
+                editingProduct = product;
             }
             document.getElementById('addProductModal').style.display = 'flex';
         }
@@ -98,7 +130,7 @@
             let response = await fetch('http://localhost:3000/api/product/getAllProducts');
             ProductsData = await response.json();
             ProductsData = ProductsData.data
-            
+
             let tableBody = document.querySelector('#productTable tbody');
             tableBody.innerHTML = '';
             ProductsData.forEach(element => {
